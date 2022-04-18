@@ -24,18 +24,17 @@ class Result:
 
 
 class MissingRekeyTo(AbstractDetector):
-
     NAME = "rekeyTo"
     DESCRIPTION = "Detect paths with a missing RekeyTo check"
     TYPE = DetectorType.STATEFULLGROUP
 
     def check_rekey_to(  # pylint: disable=too-many-arguments
-        self,
-        bb: BasicBlock,
-        group_tx: Dict[int, Set[BasicBlock]],
-        idx_fitlered: Set[int],
-        current_path: List[BasicBlock],
-        all_results: Dict[str, Result],
+            self,
+            bb: BasicBlock,
+            group_tx: Dict[int, Set[BasicBlock]],
+            idx_fitlered: Set[int],
+            current_path: List[BasicBlock],
+            all_results: Dict[str, Result],
     ) -> None:
         # check for loops
         if bb in current_path:
@@ -73,19 +72,17 @@ class MissingRekeyTo(AbstractDetector):
         for next_bb in bb.next:
             self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, all_results)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> List[dict]:
 
         all_results: Dict[str, Result] = dict()
         self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], all_results)
 
-        all_results_txt: List[str] = []
+        output: List[dict] = []
         for idx, res in all_results.items():
-            description = f"Potential lack of RekeyTo check on transaction {idx}\n"
-            description += f"\tFix the paths in {res.filename}\n"
-            description += (
-                "\tOr ensure it is used with stateless contracts that check for ReKeyTo\n"
-            )
-            all_results_txt.append(description)
-            self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
+            dot_content = self.teal.bbs_to_dot(res.all_bbs_in_paths)
+            output.append({
+                'title': f"Potential lack of RekeyTo check on transaction {idx}",
+                'detail': dot_content
+            })
 
-        return all_results_txt
+        return output

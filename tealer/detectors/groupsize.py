@@ -30,11 +30,11 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         self.results_number = 0
 
     def _check_groupsize(
-        self,
-        bb: BasicBlock,
-        current_path: List[BasicBlock],
-        # use_gtnx: bool,
-        all_results: List[Result],
+            self,
+            bb: BasicBlock,
+            current_path: List[BasicBlock],
+            # use_gtnx: bool,
+            all_results: List[Result],
     ) -> None:
         # check for loops
         if bb in current_path:
@@ -61,21 +61,18 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         for next_bb in bb.next:
             self._check_groupsize(next_bb, current_path, all_results)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> List[dict]:
 
         all_results: List[Result] = []
 
         self._check_groupsize(self.teal.bbs[0], [], all_results)
 
-        all_results_txt: List[str] = []
+        output: List[dict] = []
         for res in all_results:
-            description = "Lack of groupSize check found\n"
-            description += f"\tFix the paths in {res.filename}\n"
-            description += (
-                "\tOr ensure it is used with stateless contracts that check for GroupSize\n"
-            )
+            dot_content = self.teal.bbs_to_dot(res.all_bbs_in_paths)
+            output.append({
+                'title': "Lack of groupSize check found",
+                'detail': dot_content
+            })
 
-            all_results_txt.append(description)
-            self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
-
-        return all_results_txt
+        return output

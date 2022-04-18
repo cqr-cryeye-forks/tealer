@@ -1,5 +1,6 @@
 import argparse
 import inspect
+import json
 import sys
 from pathlib import Path
 from typing import List, Any
@@ -43,7 +44,7 @@ def parse_args() -> argparse.Namespace:
 
 class ListDetectors(argparse.Action):  # pylint: disable=too-few-public-methods
     def __call__(
-        self, parser: argparse.ArgumentParser, *args: Any, **kwargs: Any
+            self, parser: argparse.ArgumentParser, *args: Any, **kwargs: Any
     ) -> None:  # pylint: disable=signature-differs
         detectors = get_detectors()
         output_detectors(detectors)
@@ -57,7 +58,6 @@ def get_detectors() -> List[Any]:
 
 
 def main() -> None:
-
     args = parse_args()
 
     with open(args.program) as f:
@@ -70,11 +70,13 @@ def main() -> None:
         teal.render_cfg(Path("cfg.dot"))
 
     else:
+        output: List[dict] = []
         for Cls in get_detectors():
             d = Cls(teal)
-            for r in d.detect():
-                print(r)
+            output.extend(d.detect())
 
+        with open('output.json', 'w') as f:
+            json.dump(output, f, indent=2)
 
 if __name__ == "__main__":
     main()

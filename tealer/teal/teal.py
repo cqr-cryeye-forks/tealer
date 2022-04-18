@@ -63,7 +63,7 @@ class Teal:
         with open(filename, "w") as f:
             f.write(dot_output)
 
-    def bbs_to_dot(self, filename: Path, highlited: Optional[List[BasicBlock]] = None) -> None:
+    def bbs_to_dot(self, highlited: Optional[List[BasicBlock]] = None) -> str:
         dot_output = "digraph g{\n"
 
         for bb in self._bbs:
@@ -77,9 +77,7 @@ class Teal:
                 dot_output += f"{id(bb)} -> {id(next_bb)};\n"
 
         dot_output += "}"
-
-        with open(filename, "w") as f:
-            f.write(dot_output)
+        return dot_output
 
     @property
     def instructions(self) -> List[Instruction]:

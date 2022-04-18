@@ -31,10 +31,10 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
     TYPE = DetectorType.STATEFULL
 
     def _check_delete(
-        self,
-        bb: BasicBlock,
-        current_path: List[BasicBlock],
-        paths_without_check: List[List[BasicBlock]],
+            self,
+            bb: BasicBlock,
+            current_path: List[BasicBlock],
+            paths_without_check: List[List[BasicBlock]],
     ) -> None:
         if bb in current_path:
             return
@@ -83,19 +83,17 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
         for next_bb in bb.next:
             self._check_delete(next_bb, current_path, paths_without_check)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> List[dict]:
 
         paths_without_check: List[List[BasicBlock]] = []
         self._check_delete(self.teal.bbs[0], [], paths_without_check)
 
-        all_results_txt: List[str] = []
-        idx = 1
+        output: List[dict] = []
         for path in paths_without_check:
-            filename = Path(f"can_delete_{idx}.dot")
-            idx += 1
-            description = "Lack of OnCompletion check allows to delete the app\n"
-            description += f"\tCheck the path in {filename}\n"
-            all_results_txt.append(description)
-            self.teal.bbs_to_dot(filename, path)
+            dot_content = self.teal.bbs_to_dot(path)
+            output.append({
+                'title': "Lack of OnCompletion check allows to delete the app",
+                'detail': dot_content
+            })
 
-        return all_results_txt
+        return output
